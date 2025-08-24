@@ -27,15 +27,19 @@ class DashboardController extends Controller
             'published_articles' => Article::published()->count(),
             'draft_articles' => Article::draft()->count(),
             'featured_articles' => Article::featured()->count(),
-            'total_users' => User::count(),
-            'active_users' => User::where('is_active', true)->count(),
         ];
+
+        // Add admin-only stats
+        if ($user->isAdmin()) {
+            $stats['total_users'] = User::count();
+            $stats['active_users'] = User::where('is_active', true)->count();
+        }
 
         // Get user's articles if editor
         if ($user->isEditor()) {
-            $stats['my_articles'] = $user->total_articles;
-            $stats['my_published'] = $user->published_articles_count;
-            $stats['my_drafts'] = $user->draft_articles_count;
+            $stats['my_articles'] = $user->articles()->count();
+            $stats['my_published'] = $user->articles()->where('status', 'published')->count();
+            $stats['my_drafts'] = $user->articles()->where('status', 'draft')->count();
         }
 
         // Recent articles
@@ -51,13 +55,13 @@ class DashboardController extends Controller
                     'id' => $article->id,
                     'title' => $article->title,
                     'status' => $article->status,
-                    'author' => $article->author->name,
+                    'author' => $article->author->username ?: $article->author->email,
                     'created_at' => $article->created_at->format('d/m/Y H:i'),
                 ];
             });
 
         // Recent activity logs (only for admin)
-        $recentLogs = [];
+        $recentLogs = collect();
         if ($user->isAdmin()) {
             $recentLogs = ActivityLog::with('user')
                 ->latest()
@@ -68,7 +72,7 @@ class DashboardController extends Controller
                         'id' => $log->id,
                         'action' => $log->action,
                         'description' => $log->description,
-                        'user' => $log->user ? $log->user->name : 'System',
+                        'user' => $log->user ? ($log->user->username ?: $log->user->email) : 'System',
                         'created_at' => $log->created_at->format('d/m/Y H:i'),
                     ];
                 });
@@ -76,15 +80,17 @@ class DashboardController extends Controller
 
         $dashboardData = [
             'user' => [
-                'name' => $user->name,
                 'email' => $user->email,
+                'username' => $user->username,
+                'display_name' => $user->username ?: explode('@', $user->email)[0],
                 'roles' => $user->roles->pluck('display_name'),
                 'is_admin' => $user->isAdmin(),
                 'is_editor' => $user->isEditor(),
+                'last_login_at' => $user->last_login_at?->diffForHumans(),
             ],
             'stats' => $stats,
-            'recent_articles' => $recentArticles,
-            'recent_logs' => $recentLogs,
+            'recentArticles' => $recentArticles,
+            'recentLogs' => $recentLogs,
         ];
 
         if (request()->expectsJson()) {
@@ -94,6 +100,6 @@ class DashboardController extends Controller
             ]);
         }
 
-        return view('admin.dashboard', compact('dashboardData'));
+        return view('admin.dashboard', $dashboardData);
     }
 }

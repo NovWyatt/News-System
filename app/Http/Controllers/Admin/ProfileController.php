@@ -24,11 +24,12 @@ class ProfileController extends Controller
         $userData = [
             'id' => $user->id,
             'username' => $user->username,
-            'name' => $user->name,
             'email' => $user->email,
+            'display_name' => $user->username ?: explode('@', $user->email)[0],
             'is_active' => $user->is_active,
             'last_login_at' => $user->last_login_at?->format('d/m/Y H:i:s'),
             'created_at' => $user->created_at->format('d/m/Y H:i:s'),
+            'email_verified_at' => $user->email_verified_at?->format('d/m/Y H:i:s'),
             'roles' => $user->roles->map(function ($role) {
                 return [
                     'name' => $role->name,
@@ -43,9 +44,9 @@ class ProfileController extends Controller
                 ];
             }),
             'stats' => [
-                'total_articles' => $user->total_articles,
-                'published_articles' => $user->published_articles_count,
-                'draft_articles' => $user->draft_articles_count,
+                'total_articles' => $user->articles()->count(),
+                'published_articles' => $user->articles()->where('status', 'published')->count(),
+                'draft_articles' => $user->articles()->where('status', 'draft')->count(),
             ],
         ];
 
@@ -67,12 +68,9 @@ class ProfileController extends Controller
         $user = auth()->user();
 
         $request->validate([
-            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'username' => 'nullable|string|max:50|unique:users,username,' . $user->id,
         ], [
-            'name.required' => 'Vui lòng nhập họ tên.',
-            'name.max' => 'Họ tên không được quá 255 ký tự.',
             'email.required' => 'Vui lòng nhập email.',
             'email.email' => 'Email không hợp lệ.',
             'email.unique' => 'Email này đã được sử dụng.',
@@ -80,8 +78,15 @@ class ProfileController extends Controller
             'username.unique' => 'Username này đã được sử dụng.',
         ]);
 
-        $oldData = $user->only(['name', 'email', 'username']);
-        $user->update($request->only(['name', 'email', 'username']));
+        $oldData = $user->only(['email', 'username']);
+
+        // Cập nhật dữ liệu
+        $updateData = ['email' => $request->email];
+        if ($request->filled('username')) {
+            $updateData['username'] = $request->username;
+        }
+
+        $user->update($updateData);
 
         ActivityLog::log(
             'profile.updated',
@@ -89,7 +94,7 @@ class ProfileController extends Controller
             $user,
             [
                 'old_data' => $oldData,
-                'new_data' => $user->fresh()->only(['name', 'email', 'username']),
+                'new_data' => $user->fresh()->only(['email', 'username']),
             ]
         );
 

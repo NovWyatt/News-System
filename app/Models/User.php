@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,8 +24,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'last_login_at' => 'datetime',
-        'is_active' => 'boolean',
+        'last_login_at'     => 'datetime',
+        'is_active'         => 'boolean',
     ];
 
     // Relationships
@@ -60,13 +59,26 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles')
-                    ->withPivot('assigned_by', 'assigned_at')
-                    ->withTimestamps();
+            ->withPivot('assigned_by', 'assigned_at')
+            ->withTimestamps();
     }
 
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function getRecentActivityLogsAttribute($limit = 10)
+    {
+        return $this->activityLogs()
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getTotalActivityLogsAttribute()
+    {
+        return $this->activityLogs()->count();
     }
 
     // News-specific relationships
@@ -78,6 +90,68 @@ class User extends Authenticatable
     public function publishedArticles()
     {
         return $this->articles()->where('status', 'published');
+    }
+
+    public function getDisplayNameAttribute()
+    {
+        return $this->username ?: explode('@', $this->email)[0];
+    }
+
+    public function getIsVerifiedAttribute()
+    {
+        return ! is_null($this->email_verified_at);
+    }
+
+    public function getRecentActivityAttribute()
+    {
+        return $this->activityLogs()
+            ->latest()
+            ->limit(5)
+            ->get();
+    }
+
+    public function getTotalActivityCountAttribute()
+    {
+        return $this->activityLogs()->count();
+    }
+
+    public function getLastActivityAttribute()
+    {
+        $lastLog = $this->activityLogs()->latest()->first();
+        return $lastLog ? $lastLog->created_at : null;
+    }
+
+// Scope methods
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    public function scopeVerified($query)
+    {
+        return $query->whereNotNull('email_verified_at');
+    }
+
+    public function scopeUnverified($query)
+    {
+        return $query->whereNull('email_verified_at');
+    }
+
+    public function scopeWithRole($query, $roleName)
+    {
+        return $query->whereHas('roles', function ($q) use ($roleName) {
+            $q->where('name', $roleName);
+        });
+    }
+
+    public function scopeRecent($query, $days = 30)
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
     }
 
     // Helper methods
