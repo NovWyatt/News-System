@@ -632,11 +632,13 @@
                         class="{{ request()->routeIs('admin.dashboard*') ? 'active' : '' }}">
                         Dashboard
                     </a>
-                    <a href="#" class="">
+                    <a href="{{ route('admin.articles.index') }}"
+                        class="{{ request()->routeIs('admin.articles*') ? 'active' : '' }}">
                         Bài viết
                     </a>
                     @if(auth()->user()->isAdmin())
-                        <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.users.index') }}"
+                            class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">
                             Người dùng
                         </a>
                         <a href="{{ route('admin.logs.index') }}"
@@ -700,20 +702,25 @@
                         <i class="ph  ph-house"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="#" class="">
+                    <a href="{{ route('admin.articles.index') }}"
+                        class="{{ request()->routeIs('admin.articles*') ? 'active' : '' }}">
                         <i class="ph  ph-article"></i>
                         <span>Bài viết</span>
                     </a>
-                    <a href="#">
-                        <i class="ph  ph-plus-circle"></i>
-                        <span>Tạo bài viết</span>
-                    </a>
+                    @if(auth()->user()->hasPermission('articles.create'))
+                        <a href="{{ route('admin.articles.create') }}"
+                            class="{{ request()->routeIs('admin.articles.create') ? 'active' : '' }}">
+                            <i class="ph  ph-plus-circle"></i>
+                            <span>Tạo bài viết</span>
+                        </a>
+                    @endif
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.users.index') }}" class="">
                             <i class="ph  ph-users"></i>
                             <span>Người dùng</span>
                         </a>
-                        <a href="{{ route('admin.logs.index') }}" class="{{ request()->routeIs('admin.logs*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.logs.index') }}"
+                            class="{{ request()->routeIs('admin.logs*') ? 'active' : '' }}">
                             <i class="ph  ph-list-bullets"></i>
                             <span>Nhật ký</span>
                         </a>

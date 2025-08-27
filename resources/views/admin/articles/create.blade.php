@@ -853,8 +853,7 @@
             // Escape to cancel
             if (e.key === 'Escape') {
                 if (confirm('Bạn có chắc muốn hủy và quay lại? Những thay đổi chưa lưu sẽ bị mất.')) {
-                    window.location.href = '{{ route('
-                    admin.articles.index ') }}';
+                    window.location.href = '{{ route('admin.articles.index') }}';
                 }
             }
         });

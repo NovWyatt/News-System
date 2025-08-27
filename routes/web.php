@@ -23,6 +23,14 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     // Login routes
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -63,31 +71,29 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
     });
 
-    // Article viewing routes (admin và editor có thể xem)
-    Route::middleware('permission:articles.view')->group(function () {
-        Route::get('articles', [ArticleController::class, 'index'])->name('articles.index');
-        Route::get('articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+    // ============================================================================
+    // ARTICLE ROUTES - ĐẶT ROUTES CỤ THỂ TRƯỚC ROUTES CÓ PARAMETER
+    // ============================================================================
 
-        // API route for AJAX/JSON requests
-        Route::get('api/articles', [ArticleController::class, 'api'])->name('articles.api');
-    });
-
-    // Article creation routes
+    // Article creation routes - ĐẶT TRƯỚC routes có {article}
     Route::middleware('permission:articles.create')->group(function () {
         Route::get('articles/create', [ArticleController::class, 'create'])->name('articles.create');
         Route::post('articles', [ArticleController::class, 'store'])->name('articles.store');
     });
 
-    // Article editing routes
+    // Article listing routes
+    Route::middleware('permission:articles.view')->group(function () {
+        Route::get('articles', [ArticleController::class, 'index'])->name('articles.index');
+
+        // API route for AJAX/JSON requests
+        Route::get('api/articles', [ArticleController::class, 'api'])->name('articles.api');
+    });
+
+    // Article editing routes - ĐẶT TRƯỚC routes có {article} khác
     Route::middleware('permission:articles.edit')->group(function () {
         Route::get('articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
         Route::put('articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
         Route::patch('articles/{article}', [ArticleController::class, 'update'])->name('articles.patch');
-    });
-
-    // Article deletion routes
-    Route::middleware('permission:articles.delete')->group(function () {
-        Route::delete('articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
     });
 
     // Article workflow management routes (publishing, archiving, featuring)
@@ -100,6 +106,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::middleware('permission:articles.edit')->group(function () {
         Route::post('articles/{article}/archive', [ArticleController::class, 'archive'])->name('articles.archive');
         Route::post('articles/{article}/toggle-featured', [ArticleController::class, 'toggleFeatured'])->name('articles.toggle-featured');
+    });
+
+    // Article deletion routes
+    Route::middleware('permission:articles.delete')->group(function () {
+        Route::delete('articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+    });
+
+    // Article viewing routes - ĐẶT CUỐI CÙNG vì có {article} parameter
+    Route::middleware('permission:articles.view')->group(function () {
+        Route::get('articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
     });
 
     // Alternative resource route approach (commented out as we use explicit routes above)

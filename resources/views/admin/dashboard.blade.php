@@ -36,10 +36,12 @@
     <div class="content-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 style="margin: 0;">Bài viết gần đây</h2>
-            <a href="#" class="flat-button">
-                <i class="ph  ph-eye" style="margin-right: 0.5rem;"></i>
-                Xem tất cả
-            </a>
+            @if(auth()->user()->hasPermission('articles.view'))
+                <a href="{{ route('admin.articles.index') }}" class="flat-button">
+                    <i class="ph  ph-eye" style="margin-right: 0.5rem;"></i>
+                    Xem tất cả
+                </a>
+            @endif
         </div>
 
         @if($recentArticles && $recentArticles->count() > 0)
@@ -118,10 +120,12 @@
                 <i class="ph  ph-file-plus" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                 <h3 style="margin-bottom: 0.5rem; color: var(--c-text-secondary);">Chưa có bài viết nào</h3>
                 <p style="margin-bottom: 1.5rem;">Hãy bắt đầu tạo bài viết đầu tiên cho website của bạn</p>
-                <a href="#" class="btn-primary">
+                @if(auth()->user()->hasPermission('articles.create') ?? true)
+                <a href="{{ route('admin.articles.create') }}" class="btn-primary">
                     <i class="ph  ph-plus" style="margin-right: 0.5rem;"></i>
                     Tạo bài viết đầu tiên
                 </a>
+                @endif
             </div>
         @endif
     </div>
@@ -170,7 +174,7 @@
         <h2>Thao tác nhanh</h2>
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             @if(auth()->user()->hasPermission('articles.create') ?? true)
-                <a href="#" class="btn-primary" style="text-align: center;">
+                <a href="{{ route('admin.articles.create') }}" class="btn-primary" style="text-align: center;">
                     <i class="ph  ph-plus" style="margin-right: 0.5rem;"></i>
                     Tạo bài viết mới
                 </a>
@@ -365,6 +369,6 @@
                     console.log('Refreshing activity logs...');
                 }, 30000);
             @endif
-    });
+        });
     </script>
 @endpush
