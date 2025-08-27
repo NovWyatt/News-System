@@ -17,6 +17,8 @@
         rel="stylesheet" type="text/css" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="css/styles.css" rel="stylesheet" />
+
+    @stack('styles')
 </head>
 
 <body class="antialiased">
@@ -40,6 +42,8 @@
     </nav>
     <!-- Page Header-->
     @yield('content')
+
+    @stack('scripts')
     <!-- Footer-->
     <footer class="border-top">
         <div class="container px-4 px-lg-5">

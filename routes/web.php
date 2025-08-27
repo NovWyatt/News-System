@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PublicArticleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,10 +21,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// Public routes
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/api/articles/load-more', [HomeController::class, 'loadMore'])->name('articles.load-more');
 
+// Static pages
 Route::get('/about', function () {
     return view('about');
 })->name('about');
@@ -30,6 +33,9 @@ Route::get('/about', function () {
 Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
+
+// Public article routes (đặt trước admin routes để tránh conflict)
+Route::get('/{article:slug}', [PublicArticleController::class, 'show'])->name('article.show');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Login routes
@@ -75,18 +81,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // ARTICLE ROUTES - ĐẶT ROUTES CỤ THỂ TRƯỚC ROUTES CÓ PARAMETER
     // ============================================================================
 
-    // Article creation routes - ĐẶT TRƯỚC routes có {article}
-    Route::middleware('permission:articles.create')->group(function () {
-        Route::get('articles/create', [ArticleController::class, 'create'])->name('articles.create');
-        Route::post('articles', [ArticleController::class, 'store'])->name('articles.store');
-    });
-
-    // Article listing routes
+    // Article listing routes - ĐẶT ĐẦU TIÊN
     Route::middleware('permission:articles.view')->group(function () {
         Route::get('articles', [ArticleController::class, 'index'])->name('articles.index');
 
         // API route for AJAX/JSON requests
         Route::get('api/articles', [ArticleController::class, 'api'])->name('articles.api');
+    });
+
+    // Article creation routes - ĐẶT SAU index
+    Route::middleware('permission:articles.create')->group(function () {
+        Route::get('articles/create', [ArticleController::class, 'create'])->name('articles.create');
+        Route::post('articles', [ArticleController::class, 'store'])->name('articles.store');
     });
 
     // Article editing routes - ĐẶT TRƯỚC routes có {article} khác
@@ -125,3 +131,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     ]);
     */
 });
+
+// ============================================================================
+// PUBLIC ARTICLE ROUTE - ĐẶT CUỐI CÙNG ĐỂ TRÁNH CONFLICT
+// ============================================================================
+// Route này sẽ match tất cả các URL không match với routes trên
+Route::get('/{article:slug}', [PublicArticleController::class, 'show'])->name('article.show');
