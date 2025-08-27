@@ -177,7 +177,7 @@
             @endif
 
             @if(auth()->user()->isAdmin())
-                <a href="#" class="flat-button" style="text-align: center;">
+                <a href="{{ route('admin.users.create') }}" class="flat-button" style="text-align: center;">
                     <i class="ph  ph-user-plus" style="margin-right: 0.5rem;"></i>
                     Thêm người dùng
                 </a>
