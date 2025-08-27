@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicArticleController;
 use Illuminate\Support\Facades\Route;
@@ -26,13 +28,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/api/articles/load-more', [HomeController::class, 'loadMore'])->name('articles.load-more');
 
 // Static pages
-Route::get('/about', function () {
-    return view('about');
-})->name('about');
+Route::get('/about', [AboutController::class, 'index'])->name('about');
 
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 
 // Public article routes (đặt trước admin routes để tránh conflict)
 Route::get('/{article:slug}', [PublicArticleController::class, 'show'])->name('article.show');
